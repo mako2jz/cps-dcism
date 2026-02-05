@@ -1,9 +1,17 @@
-const db = require('../config/db');
+import db from '../config/db.js';
+import bcrypt from 'bcrypt';
+
+// Helper to remove sensitive data
+const sanitizeUser = (user) => {
+  const { password_hash, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+};
 
 // Get all users
-exports.getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM users');
+    // explicitly select columns to avoid accidentally leaking future sensitive fields
+    const [rows] = await db.query('SELECT id, username, created_at, is_banned FROM users');
     res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -11,9 +19,9 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // Get user by ID
-exports.getUserById = async (req, res) => {
+export const getUserById = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query('SELECT id, username, created_at, is_banned FROM users WHERE id = ?', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -24,38 +32,48 @@ exports.getUserById = async (req, res) => {
 };
 
 // Create user
-exports.createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { username, password } = req.body;
+
+    // Hash Password (Salt rounds: 10)
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+
     const [result] = await db.query(
-      'INSERT INTO users (name, email) VALUES (?, ?)',
-      [name, email]
+      'INSERT INTO users (username, password_hash) VALUES (?, ?)',
+      [username, hash]
     );
-    res.status(201).json({ id: result.insertId, name, email });
+
+    // Return ID but NEVER the password
+    res.status(201).json({ id: result.insertId, username });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Update user
-exports.updateUser = async (req, res) => {
+// Update user (Self-Service)
+export const updateUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const username = req.body;
+    
+    // Note: In a real app, you should check if req.user.id matches req.params.id here so users can't update others
     const [result] = await db.query(
-      'UPDATE users SET name = ?, email = ? WHERE id = ?',
-      [name, email, req.params.id]
+      'UPDATE users SET username = ? WHERE id = ?',
+      [username, req.params.id]
     );
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json({ id: req.params.id, name, email });
+    res.json({ id: req.params.id, username });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Delete user
-exports.deleteUser = async (req, res) => {
+// Delete user (Admin or Self)
+export const deleteUser = async (req, res) => {
   try {
     const [result] = await db.query('DELETE FROM users WHERE id = ?', [req.params.id]);
     if (result.affectedRows === 0) {

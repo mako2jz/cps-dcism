@@ -5,7 +5,7 @@ function Home() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({ name: '', email: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
 
   useEffect(() => {
     fetchUsers();
@@ -29,7 +29,7 @@ function Home() {
     e.preventDefault();
     try {
       await api.post('/users', formData);
-      setFormData({ name: '', email: '' });
+      setFormData({ username: '', password: '' });
       fetchUsers();
     } catch (err) {
       setError('Failed to create user');
@@ -61,21 +61,21 @@ function Home() {
         <h3>Add New User</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name</label>
+            <label>Username</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               required
             />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label>Password</label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="password"
+              name="password"
+              value={formData.password}
               onChange={handleChange}
               required
             />
@@ -96,8 +96,7 @@ function Home() {
           ) : (
             users.map((user) => (
               <div key={user.id} className="user-card">
-                <h3>{user.name}</h3>
-                <p>{user.email}</p>
+                <h3>{user.username}</h3>
                 <button
                   className="btn btn-danger"
                   onClick={() => handleDelete(user.id)}

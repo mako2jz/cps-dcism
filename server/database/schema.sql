@@ -15,12 +15,9 @@ SET time_zone = '+00:00';
 -- USERS
 -- ================================
 CREATE TABLE users (
-  id            CHAR(36) PRIMARY KEY,
+  id            INT AUTO_INCREMENT PRIMARY KEY,
   username      VARCHAR(32) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-
-  display_name  VARCHAR(32),
-  avatar_url    TEXT,
 
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login_at TIMESTAMP NULL,
@@ -32,8 +29,8 @@ CREATE TABLE users (
 -- CLICK TESTS (CPS RUNS)
 -- ================================
 CREATE TABLE click_tests (
-  id            CHAR(36) PRIMARY KEY,
-  user_id       CHAR(36) NOT NULL,
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT NOT NULL,
 
   duration_ms   INT NOT NULL,
   total_clicks  INT NOT NULL,
@@ -58,8 +55,8 @@ CREATE TABLE click_tests (
 -- FLAGGED TESTS (ANTI-CHEAT)
 -- ================================
 CREATE TABLE flagged_tests (
-  id            CHAR(36) PRIMARY KEY,
-  click_test_id CHAR(36) NOT NULL,
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  click_test_id INT NOT NULL,
 
   reason        VARCHAR(255) NOT NULL,
   flagged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -74,7 +71,7 @@ CREATE TABLE flagged_tests (
 -- USER STATS (CACHED PERFORMANCE)
 -- ================================
 CREATE TABLE user_stats (
-  user_id     CHAR(36) PRIMARY KEY,
+  user_id     INT PRIMARY KEY,
 
   best_cps    DECIMAL(5,2),
   avg_cps     DECIMAL(5,2),

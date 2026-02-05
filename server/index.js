@@ -1,6 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
 const app = express();
 
@@ -9,21 +9,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection
-const db = require('./config/db');
-
 // Test database connection
-db.getConnection()
-  .then((connection) => {
-    console.log('MySQL connected successfully');
-    connection.release();
-  })
-  .catch((err) => {
-    console.error('MySQL connection error:', err.message);
-  });
+import { testConnection } from './config/db.js';
+
+testConnection();
 
 // Routes
-app.use('/api', require('./routes'));
+import routes from './routes/index.js';
+app.use('/api', routes);
 
 // Health check
 app.get('/', (req, res) => {
