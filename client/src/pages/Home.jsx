@@ -1,48 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api from '../services/api';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
 
 function Home() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({ username: '', password: '' });
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/users');
-      setUsers(response.data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch users');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.post('/users', formData);
       setFormData({ username: '', password: '' });
-      fetchUsers();
     } catch (err) {
       setError('Failed to create user');
-      console.error(err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/users/${id}`);
-      fetchUsers();
-    } catch (err) {
-      setError('Failed to delete user');
       console.error(err);
     }
   };
@@ -57,7 +28,7 @@ function Home() {
 
       {error && <div className="error">{error}</div>}
 
-      <div className="user-card" style={{ marginBottom: '20px' }}>
+      <Card className="user-card" style={{ marginBottom: '20px' }}>
         <h3>Add New User</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -80,11 +51,11 @@ function Home() {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary">
+          <Button type="submit" className="btn btn-primary">
             Add User
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
