@@ -43,8 +43,8 @@ CREATE TABLE click_tests (
   browser       VARCHAR(64),
   user_agent    TEXT,
 
-  started_at    TIMESTAMP NOT NULL,
-  ended_at      TIMESTAMP NOT NULL,
+  started_at    DATETIME NOT NULL,
+  ended_at      DATETIME NOT NULL,
 
   is_valid      BOOLEAN DEFAULT TRUE,
 
