@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { generalLimiter } from './middleware/rateLimiter.js';
+
+dotenv.config();
 
 const app = express();
 
@@ -8,6 +11,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
 
 // Test database connection
 import { testConnection } from './config/db.js';
