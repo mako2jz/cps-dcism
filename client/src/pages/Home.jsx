@@ -85,30 +85,6 @@ function Home() {
           </button>
         </form>
       </div>
-
-      <h2>Users</h2>
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : (
-        <div className="user-list">
-          {users.length === 0 ? (
-            <p>No users found. Add one above!</p>
-          ) : (
-            users.map((user) => (
-              <div key={user.id} className="user-card">
-                <h3>{user.username}</h3>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(user.id)}
-                  style={{ marginTop: '10px' }}
-                >
-                  Delete
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
     </div>
   );
 }
