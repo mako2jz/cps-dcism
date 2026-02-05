@@ -1,16 +1,10 @@
 import db from '../config/db.js';
 import bcrypt from 'bcrypt';
 
-// Helper to remove sensitive data
-const sanitizeUser = (user) => {
-  const { password_hash, ...userWithoutPassword } = user;
-  return userWithoutPassword;
-};
-
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    // explicitly select columns to avoid accidentally leaking future sensitive fields
+    // SECURITY: Explicitly select columns to avoid leaking password_hash or other sensitive data
     const [rows] = await db.query('SELECT id, username, created_at, is_banned FROM users');
     res.json(rows);
   } catch (error) {
@@ -34,7 +28,18 @@ export const getUserById = async (req, res) => {
 // Create user
 export const createUser = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+    
+    // Sanitize input
+    username = username.trim();
+    
+    if (username.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters long' });
+    }
 
     // Hash Password (Salt rounds: 10)
     const saltRounds = 10;
@@ -48,25 +53,38 @@ export const createUser = async (req, res) => {
     // Return ID but NEVER the password
     res.status(201).json({ id: result.insertId, username });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
 
-// Update user (Self-Service)
-export const updateUser = async (req, res) => {
+// Login user
+export const loginUser = async (req, res) => {
   try {
-    const username = req.body;
-    
-    // Note: In a real app, you should check if req.user.id matches req.params.id here so users can't update others
-    const [result] = await db.query(
-      'UPDATE users SET username = ? WHERE id = ?',
-      [username, req.params.id]
-    );
+    const { username, password } = req.body;
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    // 1. Find user by username
+    const [rows] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
+    
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-    res.json({ id: req.params.id, username });
+
+    const user = rows[0];
+
+    // 2. Compare password with hash
+    const match = await bcrypt.compare(password, user.password_hash);
+
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // 3. Return user info (excluding password)
+    const { password_hash, ...userWithoutPassword } = user;
+    res.status(200).json(userWithoutPassword);
+    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
